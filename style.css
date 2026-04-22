@@ -1,0 +1,333 @@
+/* ============================================================
+   Projet RO — feuille de style
+   Priorité : lisibilité, tables monospace à colonnes alignées.
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #1f2937;
+    background: #f3f4f6;
+    line-height: 1.5;
+}
+
+/* ---------- En-tête et navigation ---------- */
+
+header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+header h1 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.5rem;
+}
+header .sous-titre {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+}
+
+#nav-onglets {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    padding: 0 1rem;
+    overflow-x: auto;
+}
+.btn-onglet {
+    background: none;
+    border: none;
+    padding: 0.9rem 1.4rem;
+    font-size: 1rem;
+    color: #4b5563;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.btn-onglet:hover { color: #1e3a8a; background: #f9fafb; }
+.btn-onglet.actif {
+    color: #1e3a8a;
+    border-bottom-color: #3b82f6;
+    background: #eff6ff;
+}
+
+/* ---------- Main + sections ---------- */
+
+main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+.onglet { display: none; }
+.onglet.actif { display: block; }
+
+.onglet h2 {
+    margin-top: 0;
+    color: #1e3a8a;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+}
+
+.bloc {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.bloc h3 {
+    margin-top: 0;
+    color: #1e40af;
+    font-size: 1.05rem;
+}
+
+/* ---------- Formulaires ---------- */
+
+label {
+    display: inline-block;
+    margin: 0.25rem 0.5rem 0.25rem 0;
+    font-size: 0.92rem;
+}
+input[type="text"],
+input[type="number"],
+textarea {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+input[type="number"] { width: 5rem; }
+input[type="text"] { width: 22rem; }
+textarea {
+    width: 100%;
+    font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.9rem;
+}
+.bloc-textarea { display: block; margin-top: 0.5rem; }
+
+fieldset.inline {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    margin: 0.5rem 0;
+}
+fieldset.inline legend {
+    font-weight: 500;
+    padding: 0 0.25rem;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.ligne-champs {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+.separateur { color: #6b7280; font-style: italic; }
+
+/* ---------- Boutons ---------- */
+
+button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: white;
+    color: #1f2937;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.15s;
+    margin: 0.2rem 0.3rem 0.2rem 0;
+}
+button:hover:not(:disabled) {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.btn-principal {
+    background: #1e40af;
+    color: white;
+    border-color: #1e40af;
+    font-weight: 500;
+}
+.btn-principal:hover:not(:disabled) {
+    background: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+/* ---------- Zones d'affichage ---------- */
+
+.zone-apercu {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    border-radius: 4px;
+    min-height: 1.5rem;
+    font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.88rem;
+    white-space: pre-wrap;
+}
+.zone-apercu:empty::before {
+    content: "(aucune donnée)";
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.trace {
+    background: #111827;
+    color: #e5e7eb;
+    padding: 1rem;
+    border-radius: 6px;
+    max-height: 600px;
+    overflow: auto;
+    font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+    white-space: pre;
+    tab-size: 4;
+}
+.trace:empty::before {
+    content: "(la trace apparaîtra ici après exécution)";
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* ---------- Tables RO (fondamental : colonnes alignées) ---------- */
+
+table.matrice-ro {
+    border-collapse: collapse;
+    font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    background: white;
+}
+table.matrice-ro th,
+table.matrice-ro td {
+    border: 1px solid #d1d5db;
+    padding: 0.35rem 0.6rem;
+    text-align: right;
+    min-width: 3.5rem;
+    white-space: nowrap;
+}
+table.matrice-ro th {
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-weight: 600;
+}
+table.matrice-ro th.coin {
+    background: #dbeafe;
+}
+table.matrice-ro td.vide {
+    color: #9ca3af;
+    background: #f9fafb;
+}
+table.matrice-ro td.surligne {
+    background: #fef3c7;
+    font-weight: 600;
+}
+table.matrice-ro td.negatif {
+    color: #dc2626;
+    font-weight: 600;
+}
+table.matrice-ro caption {
+    caption-side: top;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    padding: 0.25rem 0;
+}
+
+/* ---------- Onglet problèmes prédéfinis ---------- */
+
+.grille-problemes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.carte-probleme {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.carte-probleme h4 {
+    margin: 0 0 0.4rem 0;
+    color: #1e3a8a;
+}
+.carte-probleme .dim {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-bottom: 0.6rem;
+}
+.carte-probleme .actions { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.carte-probleme button { font-size: 0.85rem; padding: 0.35rem 0.6rem; }
+
+/* ---------- Charts ---------- */
+
+.grille-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+.chart-box {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.5rem;
+    height: 320px;
+}
+
+/* ---------- Footer ---------- */
+
+footer {
+    text-align: center;
+    padding: 1.5rem;
+    color: #6b7280;
+    font-size: 0.85rem;
+}
+
+/* ---------- Messages d'état ---------- */
+
+.msg-erreur {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    padding: 0.6rem 0.9rem;
+    border-radius: 5px;
+    margin: 0.5rem 0;
+}
+.msg-succes {
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+    padding: 0.6rem 0.9rem;
+    border-radius: 5px;
+    margin: 0.5rem 0;
+}
+.msg-info {
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    color: #1e3a8a;
+    padding: 0.6rem 0.9rem;
+    border-radius: 5px;
+    margin: 0.5rem 0;
+}

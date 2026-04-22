@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projet RO — Problèmes de transport</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Projet de Recherche Opérationnelle</h1>
+        <p class="sous-titre">Résolution de problèmes de transport — marche-pied avec potentiel</p>
+    </header>
+
+    <nav id="nav-onglets">
+        <button class="btn-onglet actif" data-onglet="resolution">Résolution</button>
+        <button class="btn-onglet" data-onglet="problemes">Problèmes prédéfinis</button>
+        <button class="btn-onglet" data-onglet="complexite">Étude de complexité</button>
+    </nav>
+
+    <main>
+        <!-- ================= ONGLET 1 : RÉSOLUTION ================= -->
+        <section id="onglet-resolution" class="onglet actif">
+            <h2>Résolution d'un problème de transport</h2>
+
+            <div class="bloc">
+                <h3>1. Entrée du problème</h3>
+                <div class="ligne-champs">
+                    <label>
+                        Charger un fichier .txt :
+                        <input type="file" id="input-fichier" accept=".txt">
+                    </label>
+                    <span class="separateur">ou</span>
+                    <button id="btn-exemple">Charger un exemple</button>
+                </div>
+                <label class="bloc-textarea">
+                    Ou saisissez le tableau manuellement (format : n m / lignes de coûts + provision / dernière ligne = commandes) :
+                    <textarea id="input-texte" rows="10" spellcheck="false"
+placeholder="4 3
+30 20 20 450
+10 50 20 250
+50 40 30 250
+30 20 30 450
+500 600 300"></textarea>
+                </label>
+                <button id="btn-charger-texte">Charger ce texte</button>
+                <div id="zone-apercu-entree" class="zone-apercu"></div>
+            </div>
+
+            <div class="bloc">
+                <h3>2. Paramètres</h3>
+                <fieldset class="inline">
+                    <legend>Proposition initiale :</legend>
+                    <label><input type="radio" name="algo-init" value="NO" checked> Nord-Ouest</label>
+                    <label><input type="radio" name="algo-init" value="BH"> Balas-Hammer</label>
+                </fieldset>
+                <fieldset class="inline">
+                    <legend>Identification (pour le nom de la trace) :</legend>
+                    <label>Groupe : <input type="number" id="input-groupe" value="2" min="1" max="99"></label>
+                    <label>Équipe : <input type="number" id="input-equipe" value="4" min="1" max="99"></label>
+                    <label>N° problème : <input type="number" id="input-num-probleme" value="0" min="0" max="99"></label>
+                </fieldset>
+            </div>
+
+            <div class="bloc">
+                <h3>3. Exécution</h3>
+                <button id="btn-lancer-resolution" class="btn-principal">Lancer la résolution</button>
+                <button id="btn-telecharger-trace" disabled>Télécharger la trace</button>
+            </div>
+
+            <div class="bloc">
+                <h3>4. Trace d'exécution</h3>
+                <pre id="zone-trace" class="trace"></pre>
+            </div>
+        </section>
+
+        <!-- ================= ONGLET 2 : PROBLÈMES PRÉDÉFINIS ================= -->
+        <section id="onglet-problemes" class="onglet">
+            <h2>Les 12 problèmes de test</h2>
+            <p>Cliquez sur un problème pour l'exécuter avec l'algorithme de votre choix.
+               Les traces sont téléchargées sous la forme
+               <code>{groupe}-{equipe}-trace{n°}-{no|bh}.txt</code>.</p>
+            <fieldset class="inline">
+                <legend>Identification :</legend>
+                <label>Groupe : <input type="number" id="pb-input-groupe" value="2" min="1" max="99"></label>
+                <label>Équipe : <input type="number" id="pb-input-equipe" value="4" min="1" max="99"></label>
+            </fieldset>
+            <div id="liste-problemes" class="grille-problemes"></div>
+        </section>
+
+        <!-- ================= ONGLET 3 : ÉTUDE DE COMPLEXITÉ ================= -->
+        <section id="onglet-complexite" class="onglet">
+            <h2>Étude de complexité</h2>
+            <div class="bloc">
+                <h3>Configuration</h3>
+                <label>
+                    Tailles de <em>n</em> à tester (séparées par des virgules) :
+                    <input type="text" id="input-tailles" value="10, 40, 100, 400, 1000">
+                </label>
+                <label>
+                    Nombre de runs par taille :
+                    <input type="number" id="input-runs" value="30" min="1" max="200">
+                </label>
+                <label>
+                    Limite d'itérations du marche-pied (sécurité) :
+                    <input type="number" id="input-max-iter" value="200" min="1" max="10000">
+                </label>
+                <label>
+                    Ignorer le marche-pied à partir de n ≥ :
+                    <input type="number" id="input-skip-marche" value="2000" min="0" max="100000">
+                </label>
+                <button id="btn-lancer-complexite" class="btn-principal">Lancer l'étude</button>
+                <button id="btn-arreter-complexite" disabled>Arrêter</button>
+                <button id="btn-exporter-csv" disabled>Exporter les résultats en CSV</button>
+                <div id="zone-progression-complexite" class="zone-apercu"></div>
+            </div>
+
+            <div class="bloc">
+                <h3>Nuages de points</h3>
+                <div class="grille-charts">
+                    <div class="chart-box"><canvas id="chart-thetaNO"></canvas></div>
+                    <div class="chart-box"><canvas id="chart-thetaBH"></canvas></div>
+                    <div class="chart-box"><canvas id="chart-tNO"></canvas></div>
+                    <div class="chart-box"><canvas id="chart-tBH"></canvas></div>
+                    <div class="chart-box"><canvas id="chart-totalNO"></canvas></div>
+                    <div class="chart-box"><canvas id="chart-totalBH"></canvas></div>
+                </div>
+                <h3>Comparaison NO vs BH</h3>
+                <div class="chart-box"><canvas id="chart-ratio"></canvas></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Projet RO — S6 Efrei Paris — site statique (HTML/CSS/JS vanilla)</p>
+    </footer>
+
+    <!-- Chart.js uniquement pour l'onglet complexité -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
