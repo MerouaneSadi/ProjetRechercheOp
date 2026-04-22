@@ -1,0 +1,23 @@
+# Système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dépendances (sécurité au cas où)
+node_modules/
+
+# Fichiers temporaires
+*.tmp
+*.log
+*.bak
+
+# Fichiers générés par l'utilisateur pendant l'usage du site
+# (les traces téléchargées se retrouvent généralement dans Downloads, pas ici)
+/traces-generees/
