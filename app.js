@@ -40,6 +40,85 @@ const etat = {
 };
 
 /* ================================================================
+ * LES 12 PROBLÈMES DU SUJET (en dur pour éviter les soucis CORS en file://)
+ * Les mêmes valeurs se trouvent aussi dans problems/probleme_XX.txt.
+ * ================================================================ */
+
+const PROBLEMES_PREDEFINIS = {
+    1:  { couts: [[30,20],[10,50]],                                    provisions: [100,100],               commandes: [100,100] },
+    2:  { couts: [[10,20],[30,10]],                                    provisions: [100,100],               commandes: [100,100] },
+    3:  { couts: [[30,20],[10,50]],                                    provisions: [600,500],               commandes: [100,1000] },
+    4:  { couts: [[30,1],[1,30]],                                      provisions: [600,500],               commandes: [100,1000] },
+    5:  { couts: [[5,7,8],[6,8,5],[6,7,7]],                            provisions: [25,25,25],              commandes: [35,20,20] },
+    6:  { couts: [[11,12,10,10],[17,16,15,18],[19,21,20,22]],          provisions: [60,30,90],              commandes: [50,75,30,25] },
+    7:  { couts: [[50,20],[10,50],[50,40],[45,35]],                    provisions: [100,200,100,200],       commandes: [300,300] },
+    8:  { couts: [[50,20],[10,50],[55,40],[35,45],[12,8]],             provisions: [100,200,100,200,200],   commandes: [300,500] },
+    9:  { couts: [[30,20,15],[10,50,2],[9,10,30],[6,2,29],[50,40,3],[5,38,27],[50,4,22]],
+          provisions: [100,100,100,100,100,100,100], commandes: [400,200,100] },
+    10: { couts: [[300,20,15,16,17,18,20],[1,50,24,30,22,27,19],[50,40,30,3,25,26,3]],
+          provisions: [500,500,2500], commandes: [500,500,500,500,500,500,500] },
+    // Pb 11 : 20×10, a_{i,j} = 10(i-1) + j avec exception a_{5,2} = 41.
+    11: (() => {
+        const couts = [];
+        for (let i = 1; i <= 20; i++) {
+            const l = [];
+            for (let j = 1; j <= 10; j++) l.push(10*(i-1) + j);
+            couts.push(l);
+        }
+        couts[4][1] = 41;
+        const P = []; for (let i = 1; i <= 20; i++) P.push(10*i);
+        const C = [120,140,160,180,200,220,240,260,280,300];
+        return { couts, provisions: P, commandes: C };
+    })(),
+    // Pb 12 : 10×16, a_{i,j} = (21 - 2i)·10 + (17 - j).
+    12: (() => {
+        const couts = [];
+        for (let i = 1; i <= 10; i++) {
+            const l = [];
+            for (let j = 1; j <= 16; j++) l.push((21-2*i)*10 + (17-j));
+            couts.push(l);
+        }
+        return { couts, provisions: new Array(10).fill(160), commandes: new Array(16).fill(100) };
+    })()
+};
+
+/**
+ * Construit l'objet "entree" (ajoute n, m) pour un problème prédéfini.
+ */
+function chargerProblemePredefini(num) {
+    const p = PROBLEMES_PREDEFINIS[num];
+    if (!p) throw new Error(`Problème ${num} inconnu.`);
+    return { n: p.provisions.length, m: p.commandes.length,
+             couts: p.couts, provisions: p.provisions, commandes: p.commandes };
+}
+
+/**
+ * Sérialise un problème prédéfini au format .txt du sujet (pour téléchargement).
+ */
+function serialiserProblemeTxt(num) {
+    const p = chargerProblemePredefini(num);
+    const { n, m, couts, provisions, commandes } = p;
+    const larg = new Array(m).fill(1);
+    for (let j = 0; j < m; j++) {
+        for (let i = 0; i < n; i++) larg[j] = Math.max(larg[j], String(couts[i][j]).length);
+        larg[j] = Math.max(larg[j], String(commandes[j]).length);
+    }
+    let largP = 1;
+    for (let i = 0; i < n; i++) largP = Math.max(largP, String(provisions[i]).length);
+    const lignes = [`${n} ${m}`];
+    for (let i = 0; i < n; i++) {
+        const parts = [];
+        for (let j = 0; j < m; j++) parts.push(String(couts[i][j]).padStart(larg[j]));
+        parts.push(String(provisions[i]).padStart(largP));
+        lignes.push(parts.join(' '));
+    }
+    const der = [];
+    for (let j = 0; j < m; j++) der.push(String(commandes[j]).padStart(larg[j]));
+    lignes.push(der.join(' '));
+    return lignes.join('\n') + '\n';
+}
+
+/* ================================================================
  * 1. PARSING DU FICHIER .TXT
  * ================================================================ */
 
@@ -1199,7 +1278,85 @@ function afficherApercuErreur(msg) {
  * INITIALISATION AU CHARGEMENT
  * ================================================================ */
 
+/* ================================================================
+ * GESTION DE L'ONGLET « PROBLÈMES PRÉDÉFINIS »
+ * ================================================================ */
+
+function initProblemes() {
+    const conteneur = document.getElementById('liste-problemes');
+    if (!conteneur) return;
+    conteneur.innerHTML = '';
+
+    for (let num = 1; num <= 12; num++) {
+        const p = chargerProblemePredefini(num);
+        const carte = document.createElement('div');
+        carte.className = 'carte-probleme';
+        carte.innerHTML = `
+            <h4>Problème ${num}</h4>
+            <div class="dim">${p.n} fournisseurs × ${p.m} clients &nbsp; · &nbsp; ΣP = ΣC = ${p.provisions.reduce((a,b)=>a+b,0)}</div>
+            <div class="actions">
+                <button data-num="${num}" data-action="txt">Télécharger le .txt</button>
+                <button data-num="${num}" data-action="no">Résoudre (NO)</button>
+                <button data-num="${num}" data-action="bh">Résoudre (BH)</button>
+            </div>
+        `;
+        conteneur.appendChild(carte);
+    }
+
+    conteneur.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const num = parseInt(btn.dataset.num, 10);
+        const action = btn.dataset.action;
+        const groupe = parseInt(document.getElementById('pb-input-groupe').value) || 2;
+        const equipe = parseInt(document.getElementById('pb-input-equipe').value) || 4;
+        etat.groupe = groupe;
+        etat.equipe = equipe;
+
+        if (action === 'txt') {
+            const nom = `probleme_${String(num).padStart(2, '0')}.txt`;
+            telechargerTexte(serialiserProblemeTxt(num), nom);
+            return;
+        }
+
+        // Résolution (NO ou BH)
+        const entree = chargerProblemePredefini(num);
+        const algo = action === 'no' ? 'NO' : 'BH';
+        const trace = executerResolutionComplete(entree, algo);
+
+        // Stocker dans etat et basculer vers l'onglet Résolution
+        etat.entree = entree;
+        etat.resolution.algoInit = algo;
+        etat.resolution.numProbleme = num;
+        etat.resolution.trace = trace;
+
+        // Afficher dans l'onglet Résolution
+        document.getElementById('input-texte').value = serialiserProblemeTxt(num).trimEnd();
+        afficherApercuEntree(entree);
+        document.getElementById('input-groupe').value = groupe;
+        document.getElementById('input-equipe').value = equipe;
+        document.getElementById('input-num-probleme').value = num;
+        document.querySelector(`input[name="algo-init"][value="${algo}"]`).checked = true;
+        document.getElementById('zone-trace').textContent = trace;
+        document.getElementById('btn-telecharger-trace').disabled = false;
+
+        // Basculer visuellement sur l'onglet Résolution
+        document.querySelectorAll('.btn-onglet').forEach(b => {
+            b.classList.toggle('actif', b.dataset.onglet === 'resolution');
+        });
+        document.querySelectorAll('.onglet').forEach(s => {
+            s.classList.toggle('actif', s.id === 'onglet-resolution');
+        });
+        document.getElementById('onglet-resolution').scrollIntoView({ behavior: 'smooth' });
+    });
+}
+
+/* ================================================================
+ * INITIALISATION AU CHARGEMENT
+ * ================================================================ */
+
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initResolution();
+    initProblemes();
 });
