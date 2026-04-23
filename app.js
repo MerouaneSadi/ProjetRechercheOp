@@ -1610,6 +1610,10 @@ function initProblemes() {
         document.getElementById('zone-trace').textContent = trace;
         document.getElementById('btn-telecharger-trace').disabled = false;
 
+        // Auto-téléchargement de la trace (pratique pour générer les 24 traces du rendu)
+        const nomTrace = `${groupe}-${equipe}-trace${num}-${algo === 'NO' ? 'no' : 'bh'}.txt`;
+        telechargerTexte(trace, nomTrace);
+
         // Basculer visuellement sur l'onglet Résolution
         document.querySelectorAll('.btn-onglet').forEach(b => {
             b.classList.toggle('actif', b.dataset.onglet === 'resolution');
