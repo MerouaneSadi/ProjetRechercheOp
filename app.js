@@ -1279,6 +1279,276 @@ function afficherApercuErreur(msg) {
  * ================================================================ */
 
 /* ================================================================
+ * GESTION DE L'ONGLET « ÉTUDE DE COMPLEXITÉ »
+ * ------------------------------------------------------------------
+ * - Génération aléatoire : a_{i,j} ∈ [1,100], temp_{i,j} ∈ [1,100],
+ *   P_i = Σ_j temp_{i,j}, C_j = Σ_i temp_{i,j} (équilibre garanti).
+ * - Mesures : θ_NO, θ_BH, t_NO, t_BH via performance.now().
+ * - 100 runs par taille (configurable) — avec pause setTimeout(0) entre
+ *   runs pour que l'UI reste responsive.
+ * - Graphes Chart.js : nuage scatter + enveloppe supérieure.
+ * ================================================================ */
+
+let chartsComplexite = {};  // instances Chart.js indexées par id canvas
+
+/**
+ * genererProblemeAleatoire(n) — retourne {n, couts, provisions, commandes}.
+ * couts aléatoires dans [1,100], P et C calculés pour garantir l'équilibre.
+ */
+function genererProblemeAleatoire(n) {
+    const couts = Array.from({length: n}, () =>
+        Array.from({length: n}, () => 1 + Math.floor(Math.random() * 100)));
+    const temp = Array.from({length: n}, () =>
+        Array.from({length: n}, () => 1 + Math.floor(Math.random() * 100)));
+    const P = new Array(n).fill(0);
+    const C = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        P[i] += temp[i][j];
+        C[j] += temp[i][j];
+    }
+    return { n, m: n, couts, provisions: P, commandes: C };
+}
+
+/**
+ * lancerEtudeComplexite — boucle async sur (tailles × runs).
+ * Chaque run : mesure θ_NO, θ_BH, t_NO, t_BH.
+ * Entre runs : yield (setTimeout 0) pour ne pas bloquer l'UI.
+ */
+async function lancerEtudeComplexite() {
+    const taillesStr = document.getElementById('input-tailles').value;
+    const tailles = taillesStr.split(',').map(s => parseInt(s.trim(), 10))
+                              .filter(n => Number.isFinite(n) && n > 0);
+    if (tailles.length === 0) { afficherProgression('Tailles invalides.'); return; }
+    const runs = Math.max(1, parseInt(document.getElementById('input-runs').value, 10) || 30);
+    const maxIter = Math.max(1, parseInt(document.getElementById('input-max-iter').value, 10) || 200);
+    const skipMP = Math.max(0, parseInt(document.getElementById('input-skip-marche').value, 10) || 2000);
+
+    const mesures = {};
+    for (const n of tailles) mesures[n] = { thetaNO: [], thetaBH: [], tNO: [], tBH: [] };
+    etat.complexite.mesures = mesures;
+    etat.complexite.enCours = true;
+    etat.complexite.stopDemande = false;
+
+    document.getElementById('btn-lancer-complexite').disabled = true;
+    document.getElementById('btn-arreter-complexite').disabled = false;
+    document.getElementById('btn-exporter-csv').disabled = true;
+
+    const t_debut = performance.now();
+    try {
+        let total = tailles.length * runs;
+        let fait = 0;
+        for (const n of tailles) {
+            for (let r = 0; r < runs; r++) {
+                if (etat.complexite.stopDemande) throw new Error('Arrêt demandé.');
+                const pb = genererProblemeAleatoire(n);
+                const entree = { n, m: n, couts: pb.couts, provisions: pb.provisions, commandes: pb.commandes };
+
+                // θ_NO
+                let t0 = performance.now();
+                const propNO = propositionNordOuest(n, n, pb.provisions, pb.commandes);
+                let t1 = performance.now();
+                mesures[n].thetaNO.push(t1 - t0);
+
+                // θ_BH
+                t0 = performance.now();
+                const propBH = propositionBalasHammer(pb.couts, pb.provisions, pb.commandes);
+                t1 = performance.now();
+                mesures[n].thetaBH.push(t1 - t0);
+
+                // Marche-pied : skip si n trop grand
+                if (n < skipMP) {
+                    t0 = performance.now();
+                    marchePiedPotentiel(entree, propNO, { maxIter, log: () => {} });
+                    t1 = performance.now();
+                    mesures[n].tNO.push(t1 - t0);
+
+                    t0 = performance.now();
+                    marchePiedPotentiel(entree, propBH, { maxIter, log: () => {} });
+                    t1 = performance.now();
+                    mesures[n].tBH.push(t1 - t0);
+                } else {
+                    mesures[n].tNO.push(NaN);
+                    mesures[n].tBH.push(NaN);
+                }
+
+                fait++;
+                const ecoule = ((performance.now() - t_debut) / 1000).toFixed(1);
+                afficherProgression(`n=${n} · run ${r+1}/${runs} · ${fait}/${total} (${ecoule}s)`);
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+            // Rendu partiel après chaque taille
+            tracerGraphesComplexite(mesures);
+        }
+        const ecoule = ((performance.now() - t_debut) / 1000).toFixed(1);
+        afficherProgression(`Étude terminée en ${ecoule} s. ${total} runs au total.`);
+        tracerGraphesComplexite(mesures);
+        document.getElementById('btn-exporter-csv').disabled = false;
+    } catch (err) {
+        afficherProgression('Interrompu : ' + err.message);
+        // Afficher ce qu'on a pu collecter
+        tracerGraphesComplexite(mesures);
+        if (Object.values(mesures).some(v => v.thetaNO.length > 0)) {
+            document.getElementById('btn-exporter-csv').disabled = false;
+        }
+    } finally {
+        etat.complexite.enCours = false;
+        document.getElementById('btn-lancer-complexite').disabled = false;
+        document.getElementById('btn-arreter-complexite').disabled = true;
+    }
+}
+
+function afficherProgression(texte) {
+    document.getElementById('zone-progression-complexite').textContent = texte;
+}
+
+/**
+ * Trace les 7 graphes (6 nuages + 1 ratio) via Chart.js.
+ * Chaque graphe superpose : nuage de points + enveloppe supérieure (max par n).
+ */
+function tracerGraphesComplexite(mesures) {
+    if (typeof Chart === 'undefined') return;
+    const n_values = Object.keys(mesures).map(Number).sort((a, b) => a - b);
+
+    const series = [
+        { id: 'chart-thetaNO',  key: 'thetaNO', titre: 'θ_NO(n) — Nord-Ouest (ms)',                  couleur: '#2563eb' },
+        { id: 'chart-thetaBH',  key: 'thetaBH', titre: 'θ_BH(n) — Balas-Hammer (ms)',                couleur: '#059669' },
+        { id: 'chart-tNO',      key: 'tNO',     titre: 't_NO(n) — marche-pied depuis NO (ms)',       couleur: '#dc2626' },
+        { id: 'chart-tBH',      key: 'tBH',     titre: 't_BH(n) — marche-pied depuis BH (ms)',       couleur: '#ea580c' },
+    ];
+
+    for (const s of series) {
+        const pts = [];
+        const envSup = [];
+        for (const n of n_values) {
+            const vals = (mesures[n][s.key] || []).filter(Number.isFinite);
+            for (const v of vals) pts.push({ x: n, y: v });
+            if (vals.length) envSup.push({ x: n, y: Math.max(...vals) });
+        }
+        rendreScatter(s.id, s.titre, s.couleur, pts, envSup);
+    }
+
+    // Séries composites θ + t
+    const totalNOpts = [], totalNOmax = [];
+    const totalBHpts = [], totalBHmax = [];
+    for (const n of n_values) {
+        const mN = mesures[n];
+        const totaux = [];
+        for (let i = 0; i < mN.thetaNO.length; i++) {
+            const t = (mN.thetaNO[i] || 0) + (Number.isFinite(mN.tNO[i]) ? mN.tNO[i] : 0);
+            if (Number.isFinite(t)) { totaux.push(t); totalNOpts.push({ x: n, y: t }); }
+        }
+        if (totaux.length) totalNOmax.push({ x: n, y: Math.max(...totaux) });
+
+        const totauxB = [];
+        for (let i = 0; i < mN.thetaBH.length; i++) {
+            const t = (mN.thetaBH[i] || 0) + (Number.isFinite(mN.tBH[i]) ? mN.tBH[i] : 0);
+            if (Number.isFinite(t)) { totauxB.push(t); totalBHpts.push({ x: n, y: t }); }
+        }
+        if (totauxB.length) totalBHmax.push({ x: n, y: Math.max(...totauxB) });
+    }
+    rendreScatter('chart-totalNO', '(θ_NO + t_NO)(n) (ms)', '#7c3aed', totalNOpts, totalNOmax);
+    rendreScatter('chart-totalBH', '(θ_BH + t_BH)(n) (ms)', '#db2777', totalBHpts, totalBHmax);
+
+    // Ratio (t_NO + θ_NO) / (t_BH + θ_BH)
+    const ratioPts = [];
+    const ratioMax = [];
+    for (const n of n_values) {
+        const mN = mesures[n];
+        const ratios = [];
+        for (let i = 0; i < mN.thetaNO.length; i++) {
+            const num = (mN.thetaNO[i] || 0) + (Number.isFinite(mN.tNO[i]) ? mN.tNO[i] : 0);
+            const den = (mN.thetaBH[i] || 0) + (Number.isFinite(mN.tBH[i]) ? mN.tBH[i] : 0);
+            if (den > 0 && Number.isFinite(num / den)) {
+                ratios.push(num / den);
+                ratioPts.push({ x: n, y: num / den });
+            }
+        }
+        if (ratios.length) ratioMax.push({ x: n, y: Math.max(...ratios) });
+    }
+    rendreScatter('chart-ratio', '(t_NO + θ_NO) / (t_BH + θ_BH)', '#0891b2', ratioPts, ratioMax);
+}
+
+function rendreScatter(canvasId, titre, couleur, points, envSup) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    if (chartsComplexite[canvasId]) {
+        chartsComplexite[canvasId].destroy();
+    }
+    const data = {
+        datasets: [
+            {
+                label: 'runs',
+                data: points,
+                backgroundColor: couleur + '66',
+                borderColor: couleur,
+                pointRadius: 3,
+                type: 'scatter'
+            },
+            {
+                label: 'enveloppe sup.',
+                data: envSup,
+                borderColor: couleur,
+                backgroundColor: 'transparent',
+                pointRadius: 5,
+                pointStyle: 'triangle',
+                showLine: true,
+                borderWidth: 2,
+                type: 'line'
+            }
+        ]
+    };
+    chartsComplexite[canvasId] = new Chart(canvas.getContext('2d'), {
+        type: 'scatter',
+        data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                title: { display: true, text: titre },
+                legend: { display: true, position: 'bottom' }
+            },
+            scales: {
+                x: { title: { display: true, text: 'n' }, type: 'linear' },
+                y: { title: { display: true, text: titre.includes('/') ? 'ratio' : 'temps (ms)' }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+/**
+ * Exporte toutes les mesures en CSV.
+ */
+function exporterCSV() {
+    const mesures = etat.complexite.mesures || {};
+    const n_values = Object.keys(mesures).map(Number).sort((a, b) => a - b);
+    const lignes = ['n,run,thetaNO_ms,thetaBH_ms,tNO_ms,tBH_ms,totalNO_ms,totalBH_ms'];
+    for (const n of n_values) {
+        const m = mesures[n];
+        for (let i = 0; i < m.thetaNO.length; i++) {
+            const totNO = m.thetaNO[i] + (Number.isFinite(m.tNO[i]) ? m.tNO[i] : 0);
+            const totBH = m.thetaBH[i] + (Number.isFinite(m.tBH[i]) ? m.tBH[i] : 0);
+            const fmt = v => Number.isFinite(v) ? v.toFixed(6) : '';
+            lignes.push([n, i + 1, fmt(m.thetaNO[i]), fmt(m.thetaBH[i]),
+                         fmt(m.tNO[i]), fmt(m.tBH[i]), fmt(totNO), fmt(totBH)].join(','));
+        }
+    }
+    const horodat = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    telechargerTexte(lignes.join('\n') + '\n', `complexite_${horodat}.csv`);
+}
+
+function initComplexite() {
+    document.getElementById('btn-lancer-complexite').addEventListener('click', () => {
+        if (etat.complexite.enCours) return;
+        lancerEtudeComplexite();
+    });
+    document.getElementById('btn-arreter-complexite').addEventListener('click', () => {
+        etat.complexite.stopDemande = true;
+    });
+    document.getElementById('btn-exporter-csv').addEventListener('click', exporterCSV);
+}
+
+/* ================================================================
  * GESTION DE L'ONGLET « PROBLÈMES PRÉDÉFINIS »
  * ================================================================ */
 
@@ -1359,4 +1629,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initResolution();
     initProblemes();
+    initComplexite();
 });
