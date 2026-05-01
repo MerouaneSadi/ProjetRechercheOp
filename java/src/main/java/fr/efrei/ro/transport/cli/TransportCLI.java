@@ -18,6 +18,9 @@ import java.util.Scanner;
 
 public final class TransportCLI {
 
+    private static final int DEFAULT_GROUPE = 4;
+    private static final int DEFAULT_EQUIPE = 10;
+
     public void run(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
 
@@ -52,8 +55,8 @@ public final class TransportCLI {
             pb = tryParseResource(sc, numPb);
         }
 
-        int groupe = readInt(sc, "Groupe");
-        int equipe = readInt(sc, "Équipe");
+        int groupe = DEFAULT_GROUPE;
+        int equipe = DEFAULT_EQUIPE;
 
         System.out.println("Algo initial: 1) Nord-Ouest  2) Balas-Hammer");
         String a = readChoice(sc, ">", new String[]{"1", "2"});
@@ -98,8 +101,8 @@ public final class TransportCLI {
     }
 
     private void batchTraces(Scanner sc) throws Exception {
-        int groupe = readInt(sc, "Groupe");
-        int equipe = readInt(sc, "Équipe");
+        int groupe = DEFAULT_GROUPE;
+        int equipe = DEFAULT_EQUIPE;
 
         for (int pbNum = 1; pbNum <= 12; pbNum++) {
             TransportProblem pb = tryParseResource(sc, pbNum);

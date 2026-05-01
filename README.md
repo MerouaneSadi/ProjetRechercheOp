@@ -46,11 +46,10 @@ Les 12 instances `probleme_01.txt` … `probleme_12.txt` sont chargées depuis :
 
 Dans la CLI :
 - `2) Générer les 24 traces`
-- saisir `Groupe` puis `Équipe`
 
 Les fichiers sont écrits dans `traces/` au format demandé :
-- `GROUPE-EQUIPE-traceX-no.txt`
-- `GROUPE-EQUIPE-traceX-bh.txt`
+- `4-10-traceX-no.txt`
+- `4-10-traceX-bh.txt`
 
 ## Étude de complexité (export CSV)
 
