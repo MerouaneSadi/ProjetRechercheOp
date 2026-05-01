@@ -168,10 +168,29 @@ public final class TransportCLI {
             maxIter = readInt(sc, "Max itérations marche-pied (ex: 200)");
         }
 
-        Path out = Path.of("complexite").resolve("mesures.csv");
+        Path out = Path.of("complexite").resolve(measuresFilename(sizes, runs, maxIter));
         ComplexityStudy.run(sizes, runs, maxIter, out);
         System.out.println("CSV écrit: " + out.toAbsolutePath());
         System.out.println("Tu peux tracer les nuages/enveloppes dans Excel/LibreOffice/Python.");
+    }
+
+    private static String measuresFilename(int[] sizes, int runs, int maxIter) {
+        int[] s = (sizes == null) ? new int[0] : sizes.clone();
+        Arrays.sort(s);
+        String nPart;
+        if (s.length == 0) {
+            nPart = "unknownn";
+        } else if (s.length == 1) {
+            nPart = s[0] + "n";
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < s.length; i++) {
+                if (i > 0) sb.append("-");
+                sb.append(s[i]);
+            }
+            nPart = sb + "n";
+        }
+        return "mesures_" + nPart + "_" + runs + "runs_" + maxIter + "iter.csv";
     }
 
     private static String readChoice(Scanner sc, String prompt, String[] allowed) {
