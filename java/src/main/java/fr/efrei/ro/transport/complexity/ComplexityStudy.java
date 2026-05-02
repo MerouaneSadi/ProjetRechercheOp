@@ -5,6 +5,7 @@ import fr.efrei.ro.transport.algo.NorthwestCorner;
 import fr.efrei.ro.transport.algo.SteppingStoneSolver;
 import fr.efrei.ro.transport.model.TransportPlan;
 import fr.efrei.ro.transport.model.TransportProblem;
+import fr.efrei.ro.transport.algo.SolveResult;
 
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -48,12 +49,12 @@ public final class ComplexityStudy {
                     long thetaBH = t1 - t0;
 
                     t0 = System.nanoTime();
-                    SteppingStoneSolver.solve(pb, no, null, maxIter);
+                    SolveResult noRes = SteppingStoneSolver.solve(pb, no, null, maxIter);
                     t1 = System.nanoTime();
                     long tNO = t1 - t0;
 
                     t0 = System.nanoTime();
-                    SteppingStoneSolver.solve(pb, bh, null, maxIter);
+                    SolveResult bhRes = SteppingStoneSolver.solve(pb, bh, null, maxIter);
                     t1 = System.nanoTime();
                     long tBH = t1 - t0;
 
@@ -67,6 +68,7 @@ public final class ComplexityStudy {
                     doneInstances++;
                     // Affichage d'avancement (hors timings) pour savoir si ça tourne.
                     if (r == 1 || r == runs || (r % 10 == 0)) {
+
                         long nowNs = System.nanoTime();
                         long nElapsedNs = nowNs - nStartNs;
                         double avgPerRunNs = nElapsedNs / (double) r;
@@ -76,10 +78,23 @@ public final class ComplexityStudy {
                         double avgPerInstanceNs = allElapsedNs / (double) doneInstances;
                         long allEtaNs = (long) (avgPerInstanceNs * (totalInstances - doneInstances));
 
-                        System.out.printf("[n=%d] run %d/%d (%.0f%%) | n: %s écoulé, ETA %s | total: %d/%d, ETA %s%n",
-                                n, r, runs, (100.0 * r) / runs,
-                                fmtDuration(nElapsedNs), fmtDuration(nEtaNs),
-                                doneInstances, totalInstances, fmtDuration(allEtaNs));
+                        System.out.printf("[TAILLE n=%d] Run %d/%d (%.0f%%)%n", 
+                            n, r, runs, (100.0 * r) / runs);
+                        System.out.printf( "   Temps taille : %s écoulé | ETA : %s%n", 
+                            fmtDuration(nElapsedNs),fmtDuration(nEtaNs));
+                        System.out.printf("   Progression globale : %d/%d | ETA globale : %s%n",
+                            doneInstances, totalInstances, fmtDuration(allEtaNs));
+
+                        if (!noRes.isOptimal()) {
+                            System.out.printf("   Marchepied (Nord-Ouest) arrêté par maxIter [n=%d, run=%d]%n", 
+                                n, r);}
+                        
+                        if (!bhRes.isOptimal()) {
+                            System.out.printf("   Marchepied (Balas-Hammer) arrêté par maxIter [n=%d, run=%d]%n",
+                                n, r);
+                        }
+
+                        System.out.println();
                         System.out.flush();
                     }
                 }

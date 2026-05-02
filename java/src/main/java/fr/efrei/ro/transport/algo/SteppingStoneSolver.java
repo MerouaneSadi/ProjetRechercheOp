@@ -12,10 +12,11 @@ import java.util.*;
 
 public final class SteppingStoneSolver {
 
-    public static TransportPlan solve(TransportProblem pb, TransportPlan init, TraceWriter trace, int maxIter) {
+    public static SolveResult solve(TransportProblem pb, TransportPlan init, TraceWriter trace, int maxIter) {
         int n = pb.n;
         int m = pb.m;
         TransportPlan plan = init.copy();
+        boolean optimal = false;
 
         final boolean doTrace = (trace != null);
         if (doTrace) {
@@ -107,6 +108,7 @@ public final class SteppingStoneSolver {
                 }
             }
             if (entering == null) {
+                optimal = true;
                 if (doTrace) {
                     trace.blank();
                     trace.line("✔ Tous les marginaux sont ≥ 0 : OPTIMAL.");
@@ -134,7 +136,10 @@ public final class SteppingStoneSolver {
                     headers("P", n), headers("C", m), pb.supply, pb.demand));
             trace.line("Coût total final : " + plan.totalCost(pb.costs));
         }
-        return plan;
+        if (!optimal && doTrace) {
+            trace.line("Arrêt par limite d'itérations atteinte.");
+        }
+        return new SolveResult(plan, optimal);
     }
 
     private static String[] headers(String p, int k) {

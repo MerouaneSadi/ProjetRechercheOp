@@ -1,0 +1,99 @@
+╔═══════════════════════════════════════════════════════════════╗
+║    RÉSOLUTION D'UN PROBLÈME DE TRANSPORT (Java)               ║
+╚═══════════════════════════════════════════════════════════════╝
+Problème 5 — init BH
+Taille : n=3 fournisseurs, m=3 clients
+Somme provisions : 75
+Somme commandes  : 75
+
+Matrice des coûts unitaires
+───────────────────────────
+    | C1 | C2 | C3 || Prov
+────┼────┼────┼────╫─────
+ P1 |  5 |  7 |  8 ||   25
+ P2 |  6 |  8 |  5 ||   25
+ P3 |  6 |  7 |  7 ||   25
+────┼────┼────┼────╫─────
+Com | 35 | 20 | 20 ||     
+
+
+───────────────────────────────────────────────────────────────
+PROPOSITION INITIALE : Balas-Hammer
+───────────────────────────────────────────────────────────────
+Étape 1 : pénalité max = 2 sur ligne P1 (ex-aequo: L1, C3) ; case choisie (P1,C1) ; quantité = 25
+Étape 2 : pénalité max = 2 sur colonne C3 ; case choisie (P2,C3) ; quantité = 20
+Étape 3 : pénalité max = 2 sur ligne P2 ; case choisie (P2,C1) ; quantité = 5
+Étape 4 : pénalité max = 7 sur colonne C2 ; case choisie (P3,C2) ; quantité = 20
+Étape 5 : pénalité max = 6 sur ligne P3 (ex-aequo: L3, C1) ; case choisie (P3,C1) ; quantité = 5
+
+Proposition initiale
+────────────────────
+    | C1 | C2 | C3 || Prov
+────┼────┼────┼────╫─────
+ P1 | 25 |  . |  . ||   25
+ P2 |  5 |  . | 20 ||   25
+ P3 |  5 | 20 |  . ||   25
+────┼────┼────┼────╫─────
+Com | 35 | 20 | 20 ||     
+
+Coût initial : 425
+
+═══════════════════════════════════════════════════════════════
+MARCHE-PIED AVEC POTENTIEL
+═══════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════
+ITÉRATION 1
+═══════════════════════════════════════════════════════════════
+Proposition (itération 1)
+─────────────────────────
+    | C1 | C2 | C3 || Prov
+────┼────┼────┼────╫─────
+ P1 | 25 |  . |  . ||   25
+ P2 |  5 |  . | 20 ||   25
+ P3 |  5 | 20 |  . ||   25
+────┼────┼────┼────╫─────
+Com | 35 | 20 | 20 ||     
+
+Coût total : 425
+Proposition acyclique : OK.
+Proposition connexe : OK.
+
+Potentiels :
+  E = [E1=0.0, E2=1.0, E3=1.0]
+  F = [F1=5.0, F2=6.0, F3=4.0]
+
+Coûts potentiels C^p_{i,j} = E_i + F_j
+──────────────────────────────────────
+   | C1 | C2 | C3
+───┼────┼────┼───
+P1 |  5 |  6 |  4
+P2 |  6 |  7 |  5
+P3 |  6 |  7 |  5
+
+
+Coûts marginaux M_{i,j} = a_{i,j} − C^p_{i,j}
+─────────────────────────────────────────────
+   | C1 | C2 | C3
+───┼────┼────┼───
+P1 |  0 |  1 |  4
+P2 |  0 |  1 |  0
+P3 |  0 |  0 |  2
+
+
+✔ Tous les marginaux sont ≥ 0 : OPTIMAL.
+
+═══════════════════════════════════════════════════════════════
+RÉSULTAT FINAL
+═══════════════════════════════════════════════════════════════
+Proposition finale
+──────────────────
+    | C1 | C2 | C3 || Prov
+────┼────┼────┼────╫─────
+ P1 | 25 |  . |  . ||   25
+ P2 |  5 |  . | 20 ||   25
+ P3 |  5 | 20 |  . ||   25
+────┼────┼────┼────╫─────
+Com | 35 | 20 | 20 ||     
+
+Coût total final : 425
