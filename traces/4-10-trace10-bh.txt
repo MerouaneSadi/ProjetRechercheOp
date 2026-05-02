@@ -1,6 +1,7 @@
 ╔═══════════════════════════════════════════════════════════════╗
 ║    RÉSOLUTION D'UN PROBLÈME DE TRANSPORT (Java)               ║
 ╚═══════════════════════════════════════════════════════════════╝
+Problème 10 — init BH
 Taille : n=3 fournisseurs, m=7 clients
 Somme provisions : 3500
 Somme commandes  : 3500
@@ -40,6 +41,7 @@ Proposition initiale
 Com | 500 | 500 | 500 | 500 | 500 | 500 | 500 ||     
 
 Coût initial : 54000
+
 ═══════════════════════════════════════════════════════════════
 MARCHE-PIED AVEC POTENTIEL
 ═══════════════════════════════════════════════════════════════

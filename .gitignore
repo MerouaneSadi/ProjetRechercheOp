@@ -1,3 +1,6 @@
+.vscode/
+.idea/
+
 # Système
 .DS_Store
 Thumbs.db
